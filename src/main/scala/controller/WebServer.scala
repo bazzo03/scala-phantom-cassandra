@@ -8,12 +8,15 @@ import spray.json.DefaultJsonProtocol
 import scala.concurrent.Future
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.marshalling.ToResponseMarshallable
+import akka.http.scaladsl.model.StatusCodes.BadRequest
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
+import com.outworkers.phantom.dsl.ResultSet
 
-import scala.io.StdIn
+import scala.util.{Failure, Success}
+
 
 object WebServer extends SprayJsonSupport with DefaultJsonProtocol {
 
@@ -26,14 +29,31 @@ object WebServer extends SprayJsonSupport with DefaultJsonProtocol {
     implicit val executionContext = system.dispatcher
 
     val route =
-    get {
-      pathPrefix("users" / IntNumber) { id =>
-        onSuccess(findUser(id)) {
-          case Some(user) => complete(StatusCodes.OK, user)
-          case None       => complete(StatusCodes.NotFound)
+      get {
+        pathPrefix("users" / IntNumber) { id =>
+          onSuccess(findUser(id)) {
+            case Some(user) => complete(StatusCodes.OK, user)
+            case None       => complete(StatusCodes.NotFound)
+          }
         }
-      }
-    }
+      } ~
+        get {
+          path("users" ) {
+            onSuccess(findAllUsers()) {
+              case Nil    => complete(StatusCodes.NotFound)
+              case x::xs  => complete(StatusCodes.OK, x::xs)
+            }
+          }
+        } ~
+        (post & entity(as[User])) { person =>
+          path("users" ) {
+            val f = storeUser(person)
+            onSuccess(f) { extraction =>
+              complete(StatusCodes.Created)
+            }
+          }
+        }
+
 
     val bindingFuture = Http().bindAndHandle(route, "localhost", 8080)
 
@@ -41,6 +61,14 @@ object WebServer extends SprayJsonSupport with DefaultJsonProtocol {
 
   def findUser(id : Int) : Future[Option[User]] = {
     UserService.getUserById(id)
+  }
+
+  def findAllUsers() : Future[List[User]] = {
+    UserService.getAllUsers()
+  }
+
+  def storeUser(user : User) : Future[ResultSet] = {
+    UserService.storeUser(user)
   }
 
 }

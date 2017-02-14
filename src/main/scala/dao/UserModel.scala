@@ -43,4 +43,10 @@ abstract class ConcreteUserModel extends UserModel with RootConnector {
       .future()
   }
 
+  def getAllUsers () : Future[List[User]] = {
+    select
+      .consistencyLevel_=(ConsistencyLevel.ALL)
+      .fetch()
+  }
+
 }

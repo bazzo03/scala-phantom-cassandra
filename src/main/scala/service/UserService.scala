@@ -15,6 +15,12 @@ trait UserService extends ProductionDatabase {
   def storeUser(user : User) : Future[ResultSet] = {
     database.usersModel.storeUser(user)
   }
+
+  def getAllUsers() : Future[List[User]] = {
+    database.usersModel.getAllUsers
+  }
 }
 
-object UserService extends UserService with ProductionDatabase
+object UserService extends UserService with ProductionDatabase {
+
+}
