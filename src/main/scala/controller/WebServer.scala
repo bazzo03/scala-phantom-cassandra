@@ -26,21 +26,21 @@ object WebServer extends SprayJsonSupport with DefaultJsonProtocol {
     implicit val executionContext = system.dispatcher
 
     val route =
-      path("hello") {
-        get {
-          onSuccess(findUser()) {
-            case Some(user) => complete(StatusCodes.OK, user)
-            case None => complete(StatusCodes.NotFound)
-          }
+    get {
+      pathPrefix("users" / IntNumber) { id =>
+        onSuccess(findUser(id)) {
+          case Some(user) => complete(StatusCodes.OK, user)
+          case None       => complete(StatusCodes.NotFound)
         }
       }
+    }
 
     val bindingFuture = Http().bindAndHandle(route, "localhost", 8080)
 
   }
 
-  def findUser() : Future[Option[User]] = {
-        UserService.getUserById(2)
+  def findUser(id : Int) : Future[Option[User]] = {
+    UserService.getUserById(id)
   }
 
 }
