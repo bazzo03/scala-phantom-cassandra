@@ -16,18 +16,20 @@ class UserModel extends CassandraTable[ConcreteUserModel, User] {
 
   override def tableName(): String = "users"
 
-  object id extends IntColumn(this) with PartitionKey
+  object id extends LongColumn(this) with PartitionKey
 
   object name extends StringColumn(this)
 
   object lastname extends StringColumn(this)
 
-  override def fromRow(r: Row): User = User(id(r), name(r), lastname(r))
+  object address extends LongColumn(this)
+
+  override def fromRow(r: Row): User = User(id(r), name(r), lastname(r), address(r))
 }
 
 abstract class ConcreteUserModel extends UserModel with RootConnector {
 
-  def getUserById (id : Int): Future[Option[User]] = {
+  def getUserById (id : Long): Future[Option[User]] = {
     select
       .where(_.id eqs id)
       .consistencyLevel_=(ConsistencyLevel.ONE)

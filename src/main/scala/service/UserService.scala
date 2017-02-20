@@ -1,6 +1,6 @@
 package service
 
-import com.outworkers.phantom.dsl.ResultSet
+import com.outworkers.phantom.dsl.{ResultSet, UUID}
 import database.ProductionDatabase
 import persistence.User
 
@@ -8,7 +8,7 @@ import scala.concurrent.Future
 
 trait UserService extends ProductionDatabase {
 
-  def getUserById(id : Int): Future[Option[User]] = {
+  def getUserById(id : Long): Future[Option[User]] = {
     database.usersModel.getUserById(id)
   }
 
